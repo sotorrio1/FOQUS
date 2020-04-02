@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
+    <width>1316</width>
     <height>755</height>
    </rect>
   </property>
@@ -177,12 +177,47 @@ selection-color: rgb(0, 0, 0);</string>
              </attribute>
              <column>
               <property name="text">
+               <string>Include</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string/>
               </property>
              </column>
              <column>
               <property name="text">
                <string>File Type</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>RS Method</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Run Status</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Train</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Validate</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Impute Weights</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Visualization</string>
               </property>
              </column>
              <column>
@@ -256,51 +291,7 @@ candidate and history files.</string>
            <string>Ensemble Aggregation</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
-           <item row="1" column="0">
-            <widget class="QPushButton" name="backSelectionButton">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>Click to go back to ensemble selection.</string>
-             </property>
-             <property name="text">
-              <string>Back to Selection</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QPushButton" name="analyzeNUSFButton">
-             <property name="toolTip">
-              <string>Click to create a non-uniform 
-space filling design</string>
-             </property>
-             <property name="text">
-              <string>Non-Uniform Space Filling</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QPushButton" name="analyzeButton">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>Click to create a uniform 
-space filling design</string>
-             </property>
-             <property name="text">
-              <string>Uniform Space Filling</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="3">
+           <item row="0" column="0" colspan="2">
             <widget class="QTableWidget" name="aggFilesTable">
              <row>
               <property name="text">
@@ -315,6 +306,11 @@ space filling design</string>
              <row>
               <property name="text">
                <string>Output Directory</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>SDOE Method</string>
               </property>
              </row>
              <column>
@@ -354,6 +350,33 @@ space filling design</string>
              </item>
             </widget>
            </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="backSelectionButton">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>Click to go back to ensemble selection.</string>
+             </property>
+             <property name="text">
+              <string>Back to Selection</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="analyzeButton">
+             <property name="toolTip">
+              <string>Click to create a non-uniform 
+space filling design</string>
+             </property>
+             <property name="text">
+              <string>Open SDOE Dialog</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -388,6 +411,9 @@ space filling design</string>
               <string>Inspection / Deletion / Output Value Modification</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_6">
+              <item row="1" column="0" colspan="2">
+               <widget class="QTableWidget" name="deleteTable"/>
+              </item>
               <item row="0" column="0">
                <widget class="QLabel" name="delete_static">
                 <property name="text">
@@ -432,9 +458,6 @@ Changes Permanent</string>
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item row="1" column="0" colspan="2">
-               <widget class="QTableWidget" name="deleteTable"/>
               </item>
              </layout>
             </widget>

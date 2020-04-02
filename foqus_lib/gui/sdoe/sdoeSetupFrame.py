@@ -16,7 +16,7 @@ from .sdoePreview import sdoePreview
 
 from PyQt5 import QtCore, uic, QtGui
 from PyQt5.QtWidgets import QStyledItemDelegate, QApplication, QTableWidgetItem, \
-    QPushButton, QStyle, QDialog, QMessageBox, QMenu, QAbstractItemView
+    QPushButton, QStyle, QDialog, QMessageBox, QMenu, QAbstractItemView, QProgressBar, QCheckBox
 from PyQt5.QtCore import QCoreApplication, QSize, QRect, QEvent
 from PyQt5.QtGui import QCursor
 
@@ -33,16 +33,36 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
     format = '%.5f'             # numeric format for table entries in UQ Toolbox
     drawDataDeleteTable = True  # flag to track whether delete table needs to be redrawn
 
-    numberCol = 0
-    typeCol = 1
-    setupCol = 2
-    nameCol = 3
+    includeCol = 0
+    numberCol = 1
+    typeCol = 2
+    rsCol = 3
+    statusCol = 4
+    trainCol = 5
+    validateCol = 6
+    imputeCol = 7
+    vizCol = 8
+    setupCol = 9
+    nameCol = 10
 
     descriptorCol = 0
     viewCol = 1
 
     dname = os.path.join(os.getcwd(),'SDOE_files')
 
+    progressBarDefaultStyle = '''
+    QProgressBar:horizontal {
+    border: 1px solid gray;
+    border-radius: 3px;
+    background: lightgrey;
+    padding: 1px;
+    text-align: center;
+    }
+
+    QProgressBar::chunk:horizontal {
+    background: qlineargradient(spread:pad, x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 rgba(128, 255, 128 , 255), stop: 0.5 rgba(0, 226, 0, 255), stop: 1 rgba(0, 192, 0, 255));
+    }
+    '''
 
     ## This delegate is used to make the checkboxes in the delete table centered
     class MyItemDelegate(QStyledItemDelegate):
@@ -129,7 +149,6 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         self.backSelectionButton.clicked.connect(self.backToSelection)
         self.backSelectionButton.setEnabled(False)
         self.analyzeButton.setEnabled(False)
-        self.analyzeNUSFButton.setEnabled(False)
 
         ##### Set up UQ toolbox
         self.dataTabs.setEnabled(False)
@@ -158,9 +177,7 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         self.aggFilesTable.setEnabled(True)
         self.backSelectionButton.setEnabled(True)
         self.analyzeButton.clicked.connect(self.launchSdoe)
-        self.analyzeNUSFButton.clicked.connect(self.launchNUSFSdoe)
         self.analyzeButton.setEnabled(True)
-        self.analyzeNUSFButton.setEnabled(True)
         self.filesTable.setEnabled(False)
         self.addSimulationButton.setEnabled(False)
         self.loadFileButton.setEnabled(False)
@@ -171,6 +188,7 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         self.dataTabs.setEnabled(False)
 
     def on_combobox_changed(self):
+        self.hasIncompleteCand()
         self.confirmButton.setEnabled(self.hasCandidates())
         
     def getEnsembleList(self):
@@ -178,7 +196,7 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         hist_list = []
         numFiles = len(self.dat.sdoeSimList)
         for i in range(numFiles):
-            if str(self.filesTable.cellWidget(i, self.typeCol).currentText()) == 'Candidate':
+            if str(self.filesTable.cellWidget(i, self.typeCol).currentText()) == 'Complete Candidate':
                 cand_list.append(self.dat.sdoeSimList[i])
             elif str(self.filesTable.cellWidget(i, self.typeCol).currentText()) == 'History':
                 hist_list.append(self.dat.sdoeSimList[i])
@@ -224,7 +242,6 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         self.aggFilesTable.setEnabled(False)
         self.backSelectionButton.setEnabled(False)
         self.analyzeButton.setEnabled(False)
-        self.analyzeNUSFButton.setEnabled(False)
         self.filesTable.setEnabled(True)
         self.addSimulationButton.setEnabled(True)
         self.loadFileButton.setEnabled(True)
@@ -428,6 +445,23 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         cand_list, hist_list = self.getEnsembleList()
         return (len(cand_list) > 0)
 
+    def hasIncompleteCand(self):
+        numFiles = len(self.dat.sdoeSimList)
+        for i in range(numFiles):
+            if str(self.filesTable.cellWidget(i, self.typeCol).currentText()) == 'Incomplete Candidate':
+                self.filesTable.cellWidget(i, self.includeCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.rsCol).setEnabled(True)
+                self.filesTable.cellWidget(i, self.statusCol).setEnabled(True)
+                self.filesTable.cellWidget(i, self.trainCol).setEnabled(True)
+            else:
+                self.filesTable.cellWidget(i, self.includeCol).setEnabled(True)
+                self.filesTable.cellWidget(i, self.rsCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.statusCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.trainCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.validateCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.imputeCol).setEnabled(False)
+                self.filesTable.cellWidget(i, self.vizCol).setEnabled(False)
+
     def addDataToSimTable(self, data):
         if data is None:
             return
@@ -467,11 +501,97 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         item.setText(data.getModelName())
         self.filesTable.setItem(row, self.nameCol, item)
 
-        combo = QComboBox()
-        combo.addItems(['Candidate', 'History'])
-        self.filesTable.setCellWidget(row, self.typeCol, combo)
-        combo.currentTextChanged.connect(self.on_combobox_changed)
+        #Include Column
+        checkbox = QCheckBox()
+        checkbox.setChecked(False)
+        self.filesTable.setCellWidget(row, self.includeCol, checkbox)
+        checkbox.setProperty('row', row)
 
+        #File Type Column
+        combo1 = QComboBox()
+        combo1.addItems(['Complete Candidate', 'Incomplete Candidate','History'])
+        self.filesTable.setCellWidget(row, self.typeCol, combo1)
+        combo1.currentTextChanged.connect(self.on_combobox_changed)
+
+        #Response Surface (RS) Method Column
+        combo2 = QComboBox()
+        combo2.addItems(['MARS', 'Linear Regression', 'Quadratic Regression', 'Cubic Regression', 'Quartic Regression',
+                         'Gaussian Process', 'Support Vector Machine', 'MARS with Bagging', 'Sum of Trees',
+                         'Legendre Polynomial Regression', 'User Regression', 'Kriging', 'K Nearest Neighbors',
+                         'Radial Basis Function'])
+        self.filesTable.setCellWidget(row, self.rsCol, combo2)
+        combo2.setEnabled(False)
+
+        #Run Status Progress Bar Column
+        progressBar = self.filesTable.cellWidget(row, self.statusCol)
+        newProgressBar = False
+        if progressBar is None:
+            newProgressBar = True
+            progressBar = QProgressBar()
+        progressBar.setStyleSheet(self.progressBarDefaultStyle)
+        progressBar.setMinimum(0)
+        progressBar.setMaximum(data.getNumSamples())
+        try:
+            index = data.getOutputNames().index('graph.error')
+            errorCount = sum(row[index] > 0 for row in data.getOutputData())
+            formatString = '%v / %m  # errors: ' + str(errorCount)
+        except:
+            formatString = '%v / %m'
+        progressBar.setFormat(formatString)
+        progressBar.setValue(0)
+        if newProgressBar:
+            self.filesTable.setCellWidget(row, self.statusCol, progressBar)
+        progressBar.setEnabled(False)
+
+        #Train Button Train Column
+        trainButton = self.filesTable.cellWidget(row, self.trainCol)
+        newTrainButton = False
+        if trainButton is None:
+            newTrainButton = True
+            trainButton = QPushButton()
+            trainButton.setText('Train')
+
+        trainButton.setProperty('row', row)
+        if newTrainButton:
+            trainButton.clicked.connect(self.trainSim)
+            self.filesTable.setCellWidget(row, self.trainCol, trainButton)
+        trainButton.setEnabled(False)
+
+        #Validate Button Validate Column
+        validateButton = self.filesTable.cellWidget(row, self.validateCol)
+        newValidateButton = False
+        if validateButton is None:
+            newValidateButton = True
+            validateButton = QPushButton()
+            validateButton.setText('Validate')
+
+        validateButton.setProperty('row', row)
+        if newValidateButton:
+            validateButton.clicked.connect(self.validateRS)
+            self.filesTable.setCellWidget(row, self.validateCol, validateButton)
+        validateButton.setEnabled(False)
+
+        #Impute Button Impute Weights Column
+        imputeButton = self.filesTable.cellWidget(row, self.imputeCol)
+        newImputeButton = False
+        if imputeButton is None:
+            newImputeButton = True
+            imputeButton = QPushButton()
+            imputeButton.setText('Impute')
+
+        imputeButton.setProperty('row', row)
+        if newImputeButton:
+            imputeButton.clicked.connect(self.imputeWeights)
+            self.filesTable.setCellWidget(row, self.imputeCol, imputeButton)
+        imputeButton.setEnabled(False)
+
+        #Visualization Column
+        combo3 = QComboBox()
+        combo3.addItems(['Inputs', 'RS (1 input-1 output)', 'RS (2 input-1 output)', 'RS (3 input-1 output)','Inputs & Weights'])
+        self.filesTable.setCellWidget(row, self.vizCol, combo3)
+        combo3.setEnabled(False)
+
+        #View Button Setup Column
         viewButton = self.filesTable.cellWidget(row, self.setupCol)
         newViewButton = False
         if viewButton is None:
@@ -483,7 +603,6 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         if newViewButton:
             viewButton.clicked.connect(self.editSim)
             self.filesTable.setCellWidget(row, self.setupCol, viewButton)
-
 
         # Resize table
         self.resizeColumns()
@@ -530,6 +649,10 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         item.setText(self.dname)
         self.aggFilesTable.setItem(2, self.descriptorCol, item)
 
+        combo = QComboBox()
+        combo.addItems(['Uniform Space Filling', 'Non-Uniform Space Filling'])
+        self.aggFilesTable.setCellWidget(3, self.descriptorCol, combo)
+        combo.setEnabled(True)
 
         # Resize table
         self.resizeColumns()
@@ -539,19 +662,28 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
             minWidth += self.aggFilesTable.verticalScrollBar().width()
         self.aggFilesTable.setMinimumWidth(minWidth)
 
+    def trainSim(self):
+        sender = self.sender()
+        row = sender.property('row')
+        self.filesTable.cellWidget(row, self.validateCol).setEnabled(True)
+
+    def validateRS(self):
+        sender = self.sender()
+        row = sender.property('row')
+        self.filesTable.cellWidget(row, self.imputeCol).setEnabled(True)
+
+    def imputeWeights(self):
+        sender = self.sender()
+        row = sender.property('row')
+        self.filesTable.cellWidget(row, self.vizCol).setEnabled(True)
+
     def launchSdoe(self):
         candidateData, historyData = self.createAggData()
         dname = self.dname
-        type = 'USF'
-        analysis = None
-
-        dialog = sdoeAnalysisDialog(candidateData, dname, analysis, historyData, type, self)
-        dialog.exec_()
-
-    def launchNUSFSdoe(self):
-        candidateData, historyData = self.createAggData()
-        dname = self.dname
-        type = 'NUSF'
+        if str(self.aggFilesTable.cellWidget(3, self.descriptorCol).currentText())=='Uniform Space Filling':
+            type = 'USF'
+        elif str(self.aggFilesTable.cellWidget(3, self.descriptorCol).currentText())=='Non-Uniform Space Filling':
+            type = 'NUSF'
         analysis = None
 
         dialog = sdoeAnalysisDialog(candidateData, dname, analysis, historyData, type, self)
