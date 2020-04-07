@@ -37,8 +37,8 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
     numberCol = 1
     typeCol = 2
     rsCol = 3
-    statusCol = 4
-    trainCol = 5
+    trainCol = 4
+    statusCol = 5
     validateCol = 6
     imputeCol = 7
     vizCol = 8
@@ -587,7 +587,8 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
 
         #Visualization Column
         combo3 = QComboBox()
-        combo3.addItems(['Inputs', 'RS (1 input-1 output)', 'RS (2 input-1 output)', 'RS (3 input-1 output)','Inputs & Weights'])
+        combo3.addItems(['Inputs Only', 'Learned input-to-output RS (2D)', 'Learned input-to-output RS (3D)',
+                         'Learned input-to-output RS (4D)','Inputs & Outputs (2D)', 'Inputs & Outputs (3D)'])
         self.filesTable.setCellWidget(row, self.vizCol, combo3)
         combo3.setEnabled(False)
 
@@ -650,7 +651,7 @@ class sdoeSetupFrame(_sdoeSetupFrame, _sdoeSetupFrameUI):
         self.aggFilesTable.setItem(2, self.descriptorCol, item)
 
         combo = QComboBox()
-        combo.addItems(['Uniform Space Filling', 'Non-Uniform Space Filling'])
+        combo.addItems(['Uniform Space Filling', 'Non-Uniform Space Filling', 'Input-Response Space Filling'])
         self.aggFilesTable.setCellWidget(3, self.descriptorCol, combo)
         combo.setEnabled(True)
 

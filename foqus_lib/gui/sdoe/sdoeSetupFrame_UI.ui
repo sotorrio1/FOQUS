@@ -197,12 +197,12 @@ selection-color: rgb(0, 0, 0);</string>
              </column>
              <column>
               <property name="text">
-               <string>Run Status</string>
+               <string>Train</string>
               </property>
              </column>
              <column>
               <property name="text">
-               <string>Train</string>
+               <string>Train Status</string>
               </property>
              </column>
              <column>
@@ -212,7 +212,7 @@ selection-color: rgb(0, 0, 0);</string>
              </column>
              <column>
               <property name="text">
-               <string>Impute Weights</string>
+               <string>Impute Values</string>
               </property>
              </column>
              <column>
