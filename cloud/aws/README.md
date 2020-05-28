@@ -40,15 +40,15 @@ Open an Anaconda3 terminal and install base packages.
 ```
 (base) C:\Users\Administrator\Desktop> conda activate foqus
 (foqus) C:\Users\Administrator\Desktop> conda install git
+(foqus) C:\Users\Administrator\Desktop> conda install -c conda-forge nlopt
 (foqus) C:\Users\Administrator\Desktop> python -m pip install --upgrade pip
-(foqus) C:\Users\Administrator\Desktop> pip install boto3
-(foqus) C:\Users\Administrator\Desktop> pip install git+https://github.com/CCSI-Toolset/turb_client@master
 (foqus) C:\Users\Administrator\Desktop> pip install git+https://github.com/CCSI-Toolset/foqus@master
 ```
 ##### (OPTIONAL) Run FOQUS tests
 ```
-(foqus) C:\Users\Administrator\Desktop>git clone https://github.com/CCSI-Toolset/foqus; cd FOQUS
-(foqus) C:\Users\Administrator\Desktop\FOQUS>pytest
+(foqus) C:\Users\Administrator\Desktop> git clone https://github.com/CCSI-Toolset/foqus; cd FOQUS
+(foqus) C:\Users\Administrator\Desktop\FOQUS> pip install -r requirements.txt
+(foqus) C:\Users\Administrator\Desktop\FOQUS> pytest
 ================================================= test session starts =================================================
 platform win32 -- Python 3.7.3, pytest-5.1.2, py-1.8.0, pluggy-0.13.0
 rootdir: C:\Users\Administrator\Desktop\FOQUS, inifile: pytest.ini, testpaths: foqus_lib
@@ -113,6 +113,43 @@ PS C:\Users\Administrator\Desktop> [Environment]::SetEnvironmentVariable('path',
 Append the path above in method1 ( $P2 ) by navigating to the control panel:
 control panel/system and security/system/advanced system settings/environment variables/PATH
 ```
+#### Windows 2012/2016 NoInteractiveServices Registry 
+##### EventViewer Errors
+In newer versions of Windows the `Service Control Manager` will error when starting because by default this Registry property is turned-on by default.
+```
+The FOQUS Cloud Service service is marked as an interactive service.  However, the system is configured to not allow interactive services.  This service may not function properly.
+```
+##### Registry get NoInteractiveServices
+```
+PS C:\Users\Administrator> Get-ItemProperty -path HKLM:\SYSTEM\CurrentControlSet\Control\Windows\ -Name NoInteractiveSer
+vices
+
+NoInteractiveServices : 1
+PSPath                : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Windows
+                        \
+PSParentPath          : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control
+PSChildName           : Windows
+PSDrive               : HKLM
+PSProvider            : Microsoft.PowerShell.Core\Registry
+PS C:\Users\Administrator> Set-ItemProperty -path HKLM:\SYSTEM\CurrentControlSet\Control\Windows\ -Name NoInteractiveSer
+vices -Value 0
+```
+##### Registry set NoInteractiveServices
+```
+PS C:\Users\Administrator> Get-ItemProperty -path HKLM:\SYSTEM\CurrentControlSet\Control\Windows\ -Name NoInteractiveSer
+vices
+
+
+NoInteractiveServices : 0
+PSPath                : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Windows
+                        \
+PSParentPath          : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control
+PSChildName           : Windows
+PSDrive               : HKLM
+PSProvider            : Microsoft.PowerShell.Core\Registry
+```
+
+
 ## Testing
 
 ## Reference: AWS Resources
